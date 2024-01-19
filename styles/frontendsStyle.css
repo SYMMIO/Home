@@ -31,7 +31,7 @@ section {
 
 .inquire {
     margin-top: 10em;
-    background-color: #1f1f1fd6;
+    background-color: #1f1f1feb;
     border: solid 1px var(--red);
 }
 
@@ -70,7 +70,7 @@ section {
 
 .frontSectionCard {
     height: 3em;
-    background: #1f1f1fd6;
+    background: #1f1f1feb;
     padding: 1em 1em;
     position: relative;
     justify-content: left;
@@ -210,7 +210,7 @@ a {
 }
 
 .accordion-block {
-    background-color: #1f1f1fd6;
+    background-color: #1f1f1feb;
     margin-bottom: 20px;
 }
 
@@ -232,7 +232,7 @@ a {
     align-items: center;
     width: 100%;
     padding: 8px 10px;
-    background: #1f1f1fd6;
+    background: #1f1f1feb;
     color: #ffffff !important;
     border: solid 1px var(--red);
     margin: 0;
