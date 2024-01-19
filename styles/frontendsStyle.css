@@ -616,6 +616,7 @@ nav[role="custom-dropdown"] ul>li:hover {
 
     /* Visit button styles */
     .visitBtn {
+        font-weight: 800;
         height: 1.6em;
         padding: 0.8em 0.5em 0.5em 1em;
     }
@@ -629,14 +630,8 @@ nav[role="custom-dropdown"] ul>li:hover {
         flex-direction: column;
         justify-content: left;
     }
-
-    .tradeBtn2 {
+    .tradeBtn {
         margin: 0 0 0 0.1em;
-        font-size: 2em;
-    }
-
-    .tradeBtn2.active {
-        margin: 0 0 0 0.3em;
         font-size: 2em;
     }
 
@@ -687,7 +682,7 @@ nav[role="custom-dropdown"] ul>li:hover {
 
     .frontSection {
         width: 80%;
-        padding: 12em 10% 0em 10%;
+        padding: 12em 10% 12em 10%;
     }
 
     .frontssubtitle {
@@ -707,5 +702,10 @@ nav[role="custom-dropdown"] ul>li:hover {
     /*---------------------Home----------------------  */
     .overlay {
         visibility: inherit;
+    }
+
+    .accordion-block__header {
+        font-size: 10px;
+        line-height: 1.25;
     }
 }
