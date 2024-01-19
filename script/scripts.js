@@ -209,7 +209,7 @@ introTimeline.from(uniforms.iAnimProgress_2.value, {
 // Initialize Scrollify with mandatory snap scrolling
 $.scrollify({
   section: "section",
-  scrollSpeed: 2000,
+  scrollSpeed: 500,
   scrollbars: false,
   setHeights: false,
   snap: true,
