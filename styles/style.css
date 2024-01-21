@@ -634,7 +634,7 @@ nav[role="custom-dropdown"] ul>li:hover {
 }
 
 .box__text .list_top .active-span {
-	color: white;
+	color: rgb(110, 0, 0);
 	font-weight: 1.005em;
 }
 

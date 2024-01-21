@@ -78,7 +78,7 @@ let counterInterval = null;
 function startCounter() {
   counterInterval = setInterval(() => {
     if (counter <= 400) {
-      counter += 1;
+      counter += 2;
 
       // Update colors based on the counter value
       updateColors();
