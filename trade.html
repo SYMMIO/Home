@@ -15,7 +15,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/scrollify/1.0.21/jquery.scrollify.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
 
-    <link rel="stylesheet" href="./styles/frontendsStyle.css">
+    <link rel="stylesheet" href="./styles/tradeStyle.css">
 </head>
 
 
@@ -26,13 +26,21 @@
             <div class="navbar_wrapper">
                 <div class="navbar_col" id="mainMenuWrap">
                     <li class="menu__item">
-                        <a href="./index.html"> <img src="./assets/SYMMIO-Logo.png" class="menu__link logo" />
+                        <a class="" href="./index.html"> <img href="./index.html" src="./assets/SYMMIO-Logo.png"
+                                class="menu__link logo" />
                         </a>
+                    </li>
+
+                    <li class="menu__item">
+                        <a class="menu-item-2 white" href="./index.html#2">Learn more</a>
                     </li>
                 </div>
                 <div class="navbar_col">
                     <li class="menu__item">
-                        <a href="./index.html" class="tradeBtn">Home</a>
+                        <a class="menu-item-3 white" href="./howitworks.html">How it works</a>
+                    </li>
+                    <li class="menu__item" href="./trade.html">
+                        <a href="#" class="tradeBtn red">Trade</a>
                     </li>
                 </div>
             </div>
@@ -45,9 +53,21 @@
                     <a href="./index.html">
                         <img src="./assets/SYMMIO-Logo.png" class="logo-smallscreen" />
                     </a>
+                    <div class="tradeSection">
+                        <li class="menu__item">
+                            <a class="menu__link" href="./index.html">Home</a>
+                        </li>
+
+                        <li class="menu__item">
+                            <a class="menu__link" href="./index.html#2">Learn more</a>
+                        </li>
+                    </div>
                     <div class="navbar_col">
                         <li class="menu__item">
-                            <a href="./index.html" class="tradeBtn">Home</a>
+                            <a class="menu__link" href="./howitworks.html">How it works</a>
+                        </li>
+                        <li class="menu__item">
+                            <a href="./trade.html" class="tradeBtn2 red">Trade</a>
                         </li>
                     </div>
                 </div>
@@ -63,7 +83,10 @@
     <div class="webGL" id="webGLID"></div>
 
     <main class="frontSection" id="main">
-
+        <div id="progressbar"></div>
+        <div class="scrollDown-wrapper" id="scrollDownID">
+            <div class="scroll-down"></div>
+        </div>
         <p class="frontssubtitle">Symmetry Labs A.G. does not operate its own Frontend to ensure censorship resistance
             of the underlying
             bilateral & intent technology.

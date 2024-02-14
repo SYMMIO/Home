@@ -78,7 +78,7 @@ let counterInterval = null;
 function startCounter() {
   counterInterval = setInterval(() => {
     if (counter <= 400) {
-      counter += 2;
+      counter += 1;
 
       // Update colors based on the counter value
       updateColors();
@@ -110,10 +110,8 @@ gsap.to(uniforms.iAnimProgress_1.value, {
     start: "0%",
     end: "100%",
     scrub: true,
-    onUpdate: animCounter,
   },
 });
-
 gsap.to(uniforms.iAnimProgress_1.value, {
   y: 1,
   scrollTrigger: {
@@ -121,76 +119,12 @@ gsap.to(uniforms.iAnimProgress_1.value, {
     start: "0%",
     end: "100%",
     scrub: true,
-    onUpdate: animCounter,
-  },
-});
-
-// Function to check conditions and start/stop counting
-// Function to check conditions and start/stop counting
-function animCounter() {
-  // Check if iAnimProgress_1.x is more than 0.1 and iAnimProgress_1.y is less than 0.9
-  if (
-    uniforms.iAnimProgress_1.value.x > 0.1 &&
-    uniforms.iAnimProgress_1.value.y < 0.9
-  ) {
-    // Start counting if not already counting
-    if (!counterInterval) {
-      startCounter();
-    }
-  } else {
-    // Reset and stop counting if conditions are not met
-    resetCounter();
-  }
-}
-// Function to update colors based on the counter value
-function updateColors() {
-  const colorList = document.getElementById("colorList");
-  const items = colorList.getElementsByTagName("li");
-
-  // Reset all items to blue
-  for (let i = 0; i < items.length; i++) {
-    items[i].className = "blue";
-  }
-
-  // Update colors based on the counter value
-  if (counter >= 50 && counter < 100) {
-    items[0].className = "red";
-  } else if (counter >= 100 && counter < 150) {
-    items[1].className = "red";
-  } else if (counter >= 150 && counter < 200) {
-    items[2].className = "red";
-  } else if (counter >= 200 && counter < 250) {
-    items[3].className = "red";
-  } else if (counter >= 250 && counter < 300) {
-    items[4].className = "red";
-  } else if (counter >= 300 && counter <= 350) {
-    items[5].className = "red";
-  }
-}
-
-gsap.to(uniforms.iAnimProgress_1.value, {
-  z: 1,
-  scrollTrigger: {
-    trigger: ".sectionWrap.three",
-    start: "0%",
-    end: "100%",
-    scrub: true,
-  },
-});
-
-gsap.to(uniforms.iAnimProgress_2.value, {
-  x: 1,
-  scrollTrigger: {
-    trigger: ".sectionWrap.four",
-    start: "0%",
-    end: "100%",
-    scrub: true,
   },
 });
 gsap.to(uniforms.iAnimProgress_2.value, {
   y: 1,
   scrollTrigger: {
-    trigger: ".sectionWrap.five",
+    trigger: ".sectionWrap.three",
     start: "0%",
     end: "100%",
     scrub: true,
@@ -209,19 +143,13 @@ introTimeline.from(uniforms.iAnimProgress_2.value, {
 // Initialize Scrollify with mandatory snap scrolling
 $.scrollify({
   section: "section",
-  scrollSpeed: 1000,
+  scrollSpeed: 1500,
   scrollbars: false,
   setHeights: false,
   snap: true,
   scrollSnapOffset: 0,
   easing: "easeOutSine",
 });
-
-// scroll to the first section on refresh
-$(document).ready(function () {
-  $.scrollify.move("#1");
-});
-
 // Dark/Light mode function
 const toggleSwitch = document.getElementById("toggleSwitch");
 const htmlElement = document.querySelector("html");
@@ -235,7 +163,7 @@ $("#scrollDownID").on(
   "click",
   debounce(function () {
     if (
-      window.scrollY == document.querySelector(".sectionWrap.five").offsetTop
+      window.scrollY == document.querySelector(".sectionWrap.two").offsetTop
     ) {
       $.scrollify.move("#1");
     } else {
@@ -279,16 +207,81 @@ $('a[href^="#"]').on("click", function (event) {
 //---SCROLLIFY---↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
 //---SCROLLFUNCTIONS---↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+const sectionOne = document.querySelector(".sectionWrap.one");
+const sectionOneTop = sectionOne.offsetTop;
+const sectionTwo = document.querySelector(".sectionWrap.two");
+const sectionTwoTop = sectionTwo.offsetTop;
+const sectionThree = document.querySelector(".sectionWrap.three");
+const sectionThreeTop = sectionThree.offsetTop;
+
+const menuItem2 = document.querySelector(".menu-item-2");
+const menuItem3 = document.querySelector(".menu-item-3");
+
 $("#reachus").addClass("disabled");
+sectionTwo.style.opacity = 0;
+sectionThree.style.opacity = 0;
+
 $(window).scroll(function () {
-  //scroll down icon invertion
+  //MENU ITEMS COLOR
+    
+  if (
+    window.scrollY >= sectionTwoTop / 2 &&
+    window.scrollY <= sectionThreeTop-(sectionTwoTop/2.0)
+  ) {
+    menuItem2.classList.add("red");
+    menuItem2.classList.remove("white");
+  } else {
+    menuItem2.classList.remove("red");
+    menuItem2.classList.add("white");
+  }
+  if (
+    window.scrollY >= sectionThreeTop -(sectionTwoTop/2.0)
+  ) {
+    menuItem3.classList.add("red");
+    menuItem3.classList.remove("white");
+  } else {
+    menuItem3.classList.remove("red");
+    menuItem3.classList.add("white");
+  }
+
+
+  //ONE  - section functions based on current section
+
+  if (window.scrollY == sectionOneTop) {
+    sectionOne.style.opacity = 1;
+  } else {
+    sectionOne.style.opacity = 1 - window.scrollY / sectionTwoTop;
+  }
+  //TWO  - section functions based on current section
+
+  var opacity = Math.max((window.scrollY / sectionTwoTop - 0.5) * 2.0, 0.0);
+
+  if (window.scrollY <= sectionTwoTop) {
+    sectionTwo.style.opacity = opacity;
+  } else {
+    opacity = (sectionTwoTop / window.scrollY - 0.5) * 2.0;
+    sectionTwo.style.opacity = opacity;
+  }
+
+  //THREE  - section functions based on current section
+  var opacityThree = Math.max(
+    (window.scrollY / sectionThreeTop - 0.5) * 2.0,
+    0.0
+  );
+
   const scrollDownElement = document.querySelector(".scrollDown-wrapper");
-  const sectionFive = document.querySelector(".sectionWrap.five").offsetTop;
-  if (window.scrollY == sectionFive) {
+  if (
+    window.scrollY > sectionThreeTop / 2 &&
+    window.scrollY <= sectionThreeTop
+  ) {
+    sectionThree.style.opacity = opacityThree;
     scrollDownElement.style.transform = `scaleY(-1)`;
+
     $("#reachus").removeClass("disabled");
   } else {
+    sectionThree.style.opacity = opacityThree;
     scrollDownElement.style.transform = `scaleY(1)`;
+
     $("#reachus").addClass("disabled");
   }
 
@@ -298,43 +291,6 @@ $(window).scroll(function () {
   var wh = $(window).height();
   var scrollPercent = (scroll / (dh - wh)) * wh;
   $("#progressbar").css("height", scrollPercent + "px");
-
-  //caption text visibility
-  const sections = document.querySelectorAll(".sectionWrap");
-  const texts = document.querySelectorAll(".box__text");
-
-  sections.forEach((section, index) => {
-    const rect = section.getBoundingClientRect();
-    const isVisible =
-      rect.top <= window.innerHeight / 2 &&
-      rect.bottom >= window.innerHeight / 2;
-    if (isVisible) {
-      const opacity =
-        1 - Math.max(0, Math.min(1, Math.abs(rect.top) / window.innerHeight));
-      texts[index].style.opacity = opacity;
-    } else {
-      texts[index].style.opacity = 0;
-    }
-  });
-
-  const scrollPosition = $(this).scrollTop();
-  // Highlight current section in menu on scroll
-  $("section").each(function () {
-    var sectionTop = $(this).offset().top;
-    var sectionHeight = $(this).outerHeight();
-    var sectionId = $(this).attr("id");
-
-    // Check if the middle of the section is in the viewport
-    if (
-      scrollPosition + window.innerHeight / 2 >= sectionTop &&
-      scrollPosition + window.innerHeight / 2 < sectionTop + sectionHeight
-    ) {
-      $(".menu__item").removeClass("menu__item--current");
-      $(".menu__link[href='#" + sectionId + "']")
-        .parent()
-        .addClass("menu__item--current");
-    }
-  });
 });
 //---SCROLLFUNCTIONS---↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 

@@ -1,0 +1,562 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/109/three.min.js"></script>
+<script src="https://unpkg.com/gsap@3.5.1/dist/gsap.min.js"></script>
+<script src="https://unpkg.com/gsap@3.5.1/dist/ScrollTrigger.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Manrope');
+
+  body {
+    font-family: "Manrope", sans-serif;
+    margin: 0;
+    padding: 0;
+
+  }
+.logo{
+  position: fixed;
+  height: 30px;
+  margin: 30px;
+  -webkit-filter: drop-shadow(0px 0px 8px #000);
+  filter: drop-shadow(0px 0px 8px #000);
+}
+  .box404 {
+    position: fixed;
+    z-index: 2;
+    bottom: 10%;
+    width: 60%;
+    margin-left: 20%;
+  }
+
+  .textContainer {
+    display: flex;
+    flex-direction: column;
+    text-shadow: 0px 0px 10px rgba(0, 0, 0, 1);
+  }
+
+  .header1 {
+    font-weight: 800;
+    font-size: 8em;
+    color: aliceblue;
+    text-align: center;
+    line-height: 110%;
+  }
+
+  .header2 {
+    line-height: 140%;
+    font-weight: 800;
+    font-size: 2em;
+    color: aliceblue;
+    text-align: center;
+  }
+  .header3 {
+    font-size: 1em;
+    color: aliceblue;
+    text-align: center;
+    line-height: 160%;
+
+  }
+  #webgl-container {
+    position: fixed;
+    z-index: 0;
+  }
+  @media (max-width: 1000px) {
+    .header1 {
+    font-size: 12em;
+  }
+  .header2 {
+    font-size: 4em;
+  }
+  .header3 {
+    font-size: 2em;
+  }
+}
+</style>
+<div id="webgl-container"></div>
+<a  href="./index.html"> <img src="./assets/SYMMIO-Logo.png"
+  class=" logo" />
+</a>
+<div class="box404">
+  <div class="textContainer">
+  <a class="header1">404</a>
+  <a class="header2">Symmetrical Anomaly Detected</a>
+  <a class="header3">Page Not Found. But perhaps, the page was never meant to be found in the first place. This is not a linear, central web you're traversing, friend. This is an open, ever-shifting lattice of possibilities. Retrace your steps, or forge a new path. The destination might surprise you.</a>
+
+</div>
+</div>
+<script id="fragmentShader" type="x-shader/x-fragment">
+
+  #extension GL_OES_standard_derivatives : enable
+
+  uniform sampler2D myTexture;
+  varying vec2 texcoord;
+uniform vec2 iResolution;
+    uniform float iTime;
+  uniform vec2 iMousePos;
+    uniform float iScrollProgress;
+#ifdef GL_ES
+precision highp float;
+#endif
+ 
+#define PI 3.141592654
+#define HSV2RGB_K  vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0)
+#define HSV2RGB(c) (c.z * mix(HSV2RGB_K.xxx, clamp(abs(fract(c.xxx + HSV2RGB_K.xyz) * 6.0 - HSV2RGB_K.www) - HSV2RGB_K.xxx, 0.0, 1.0), c.y))
+
+
+
+// License: MIT, author: Inigo Quilez, found: https://iquilezles.org/www/articles/intersectors/intersectors.htm
+float rayPlane(vec3 ro, vec3 rd, vec4 p) {
+  return -(dot(ro,p.xyz)+p.w)/dot(rd,p.xyz);
+}
+// License: MIT, author: Inigo Quilez, found: https://iquilezles.org/www/articles/distfunctions2d/distfunctions2d.htm
+float box(vec2 p, vec2 b) {
+  vec2 d = abs(p)-b;
+  return length(max(d,0.0)) + min(max(d.x,d.y),0.0);
+}
+// License: MIT, author: Inigo Quilez, found: https://www.iquilezles.org/www/articles/spherefunctions/spherefunctions.htm
+vec2 raySphere(vec3 ro, vec3 rd, vec4 dim) {
+  vec3 ce = dim.xyz;
+  float ra = dim.w;
+  vec3 oc = ro - ce;
+  float b = dot( oc, rd );
+  float c = dot( oc, oc ) - ra*ra;
+  float h = b*b - c;
+  if( h<0.0 ) return vec2(-1.0); // no intersection
+  h = sqrt( h );
+  return vec2( -b-h, -b+h );
+}
+const vec3 skyCol       = HSV2RGB(vec3(0.58, 0.86, 1.0));
+
+
+// License: Unknown, author: Unknown, found: don't remember
+float tanh_approx(float x) {
+  //  Found this somewhere on the interwebs
+  //  return tanh(x);
+  float x2 = x*x;
+  return clamp(x*(27.0 + x2)/(27.0+9.0*x2), -1.0, 1.0);
+}
+const vec3 speCol1      = HSV2RGB(vec3(0.60, 0.25, 1.0));
+const vec3 speCol2      = HSV2RGB(vec3(0.55, 0.25, 1.0));
+const vec3 diffCol1     = HSV2RGB(vec3(0.60, 0.90, 1.0));
+const vec3 diffCol2     = HSV2RGB(vec3(0.55, 0.90, 1.0));
+
+vec4 sphere(vec3 ro, vec3 rd, vec4 sdim) {
+  vec2 si = raySphere(ro, rd, sdim);
+  
+  vec3 nsp = ro + rd*si.x;
+
+  const vec3 lightPos1   = vec3(0.0, 10.0, 10.0);
+  const vec3 lightPos2   = vec3(0.0, -80.0, 10.0);
+  
+  vec3 nld1   = normalize(lightPos1-nsp); 
+  vec3 nld2   = normalize(lightPos2-nsp); 
+  
+  vec3 nnor   = normalize(nsp - sdim.xyz);
+
+  vec3 nref   = reflect(rd, nnor);
+
+  const float sf = 4.0;
+  float ndif1 = max(dot(nld1, nnor), 0.0);
+  ndif1       *= ndif1;
+  vec3 nspe1  = pow(speCol1*max(dot(nld1, nref), 0.0), sf*vec3(1.0, 0.8, 0.5));
+
+  float ndif2 = max(dot(nld2, nnor), 0.0);
+  ndif2       *= ndif2;
+  vec3 nspe2  = pow(speCol2*max(dot(nld2, nref), 0.0), sf*vec3(0.9, 0.5, 0.5));
+
+  vec3 nsky;
+  float nfre  = 1.0+dot(rd, nnor);
+  nfre        *= nfre;
+
+  vec3 scol = vec3(0.0); 
+  scol += nsky*mix(vec3(0.25), vec3(0.5, 0.5, 1.0), nfre);
+  scol += diffCol1*ndif1;
+  scol += diffCol2*ndif2;
+  scol += nspe1;
+  scol += nspe2;
+  
+  float t = tanh_approx(2.0*(si.y-si.x)/sdim.w);
+  
+  return vec4(scol, t);
+}
+
+vec3 sphereRender(vec3 ro, vec3 rd) {
+  vec3 skyCol;
+  vec3 col = skyCol;
+  const vec4 sdim0 = vec4(vec3(0.0), 2.0);
+  vec4 scol0 = sphere(ro, rd, sdim0);
+  col = mix(col, scol0.xyz, scol0.w);
+  return col;
+}
+
+vec3 sphereEffect(vec2 p) {
+  const float fov = tan(1.0);
+  const vec3 ro = 1.0*vec3(0.0, 2.0, 5.0);
+  const vec3 la = vec3(0.0, 0.0, 0.0);
+  const vec3 up = vec3(0.0, 1.0, 0.0);
+
+  vec3 ww = normalize(la - ro);
+  vec3 uu = normalize(cross(up, ww));
+  vec3 vv = cross(ww,uu);
+  vec3 rd = normalize(-p.x*uu + p.y*vv + fov*ww);
+
+  vec3 col = sphereRender(ro, rd);
+  
+  return col;
+}
+
+vec3 cityOfKali(vec2 p) {
+  vec2 c = -vec2(0.5, 0.5)*1.12;
+
+  float s = 2.0;
+  vec2 kp = p/s;
+ 
+  const float a = PI/4.0;
+  const vec2 n = vec2(cos(a), sin(a));
+
+  float ot2 = 1E6;
+  float ot3 = 1E6;
+  float n2 = 0.0;
+  float n3 = 0.0;
+
+  const float mx = 12.0;
+  for (float i = 0.0; i < mx; ++i) {
+    float m = (dot(kp, kp));
+    s *= m;
+    kp = abs(kp)/m + c;
+    float d2 = (abs(dot(kp,n)))*s;
+    if (d2 < ot2) {
+      n2 = i;
+      ot2 = d2;
+    }
+    float d3 = (dot(kp, kp));
+    if (d3 < ot3) {
+      n3 = i;
+      ot3 = d3;
+    }
+  }
+  vec3 col = vec3(0.0);
+  n2 /= mx;
+  n3 /= mx;
+  col += 0.15*(HSV2RGB(vec3(0.0, 0.90, 0.025)));
+  col += HSV2RGB(vec3(0.0, 0.85, 0.00000025))/(ot3*ot3+0.000000025);
+  return col;
+}
+#define PI_2        (0.5*PI)
+// License: MIT, author: Pascal Gilcher, found: https://www.shadertoy.com/view/flSXRV
+float atan_approx(float y, float x) {
+  float cosatan2 = x / (abs(x) + abs(y));
+  float t = PI_2 - cosatan2 * PI_2;
+  return y < 0.0 ? -t : t;
+}
+vec3 toSpherical(vec3 p) {
+  float r   = length(p);
+  float t   = acos(p.z/r);
+  float ph  = atan_approx(p.y, p.x);
+  return vec3(r, t, ph);
+}
+// License: MIT OR CC-BY-NC-4.0, author: mercury, found: https://mercury.sexy/hg_sdf/
+float mod1(inout float p, float size) {
+  float halfsize = size*0.5;
+  float c = floor((p + halfsize)/size);
+  p = mod(p + halfsize, size) - halfsize;
+  return c;
+}
+ vec3 sunDir;
+ 
+#define ROT(a)      mat2(cos(a), sin(a), -sin(a), cos(a))
+vec3 outerSkyRender2(vec3 ro, vec3 rd) {
+float sunAnimTimer= sin(iTime/8.0);
+
+    vec3 sunCol = HSV2RGB(vec3(0.01, 0.5, 0.0002 * smoothstep(1.0, 4.0, iTime) ));
+    
+ sunDir =  vec3(-0.0, 0.0+sunAnimTimer/4.0, 1.0);
+ vec3 center = ro+vec3(-100.0, 40.0, 100.0);
+  vec4 sdim = vec4(center, 50);
+  vec2 pi = raySphere(ro, rd, sdim);
+  const vec3 pn = normalize(vec3(0., 1.0, -0.8));
+  vec4 pdim = vec4(pn, -dot(pn, center)); 
+  float ri = rayPlane(ro, rd, pdim);
+
+  vec3 col = vec3(0.0);
+  col += HSV2RGB(vec3(0.97, 0.0, 0.1 * smoothstep(1.0, 4.0, iTime)));
+  
+  col += sunCol/pow((1.001-((dot(sunDir, rd)))), 2.0);
+
+  if (pi.x != -1.0) {
+    vec3 pp = ro + rd*pi.x;
+    vec3 psp= pp-sdim.xyz;
+    vec3 pn = normalize(pp-sdim.xyz);
+    psp = psp.zxy;
+    psp.yz *= ROT(-0.5);
+    psp.xy *= ROT(0.025*iTime);
+    vec3 pss= toSpherical(psp);
+    vec3 pcol = vec3(0.0);
+    float dif = max(dot(pn, sunDir), 0.0);
+    vec3 sc = 2000.0*sunCol;
+    pcol += sc*dif;
+    pcol += (cityOfKali(pss.yz));
+    pcol += pow(max(dot(reflect(rd, pn), sunDir), 0.0), 9.0)*sc;
+    col = mix(col, pcol, tanh_approx(0.125*(pi.y-pi.x)));
+    
+  }
+
+  vec3 gcol = vec3(0.0);
+
+  vec3 rp = ro + rd*ri;
+  float rl = length(rp-center);
+  float rb = 1.55*sdim.w;
+  float re = 2.45*sdim.w;
+  float rw = 0.1*sdim.w;
+  
+  //atmosphere light
+
+  col += gcol/max(abs(rd.y), 0.0033);
+
+return col;
+}
+
+
+// Function to calculate the value of an equilateral triangle
+float equilateralTriangle(vec2 p) {
+    const float k = sqrt(3.0);
+    p.x = abs(p.x) - 1.0;
+    p.y = p.y + 1.0 / k;
+    if(p.x + k * p.y > 0.0)
+        p = vec2(p.x - k * p.y, -k * p.x - p.y) / 2.0;
+    p.x -= clamp(p.x, -2.0, 0.0);
+    return -length(p) * sign(p.y);
+}
+// Function for rendering the triangle
+vec3 triRender2(vec3 col, vec3 ro, vec3 rd) {
+  // Triangle fill color
+    vec3 fillColor = vec3(0.005, 0.0, 0.0);
+
+  // Triangle calculations
+    const vec4 tpdim = vec4(0.0, 0.0, 1.0, -2.0);
+    float tpd = rayPlane(ro, rd, tpdim);
+    vec3 pp = ro + rd * tpd;
+    vec2 p = pp.xy;
+    p.y -= 1.35;
+    p.x -= 5.0;
+
+    // Apply rotation to the triangle around its center
+    float rotationAngle = iTime/8.0; // You can modify this based on your time needs
+    mat2 rotationMatrix = mat2(cos(rotationAngle), -sin(rotationAngle), sin(rotationAngle), cos(rotationAngle));
+    p = rotationMatrix * p; // Rotate
+
+    // Triangle resize
+    p *= 0.45;
+  // Triangle y offset
+    float angle = iTime; // You can adjust the speed by multiplying iTime with a constant
+    float radius = 1.0;  // Adjust the radius as needed
+  // Triangle inner glow factor
+    float x = cos(angle) * radius;
+    float y = sin(angle) * radius;
+
+    float hoff = dot(x, p.x) + dot(y, p.y);    vec3 gcol = HSV2RGB(vec3(0.01, 0.7, hoff*0.01));
+  // Triangle displacement
+    float dt = equilateralTriangle(p);
+
+  // Triangle to scene visibility ratio
+    col = dt < 0.0 ? fillColor : col;
+
+  // Triangle edge glow modification
+    col += (gcol / max(abs(dt), 0.002));
+    return col;
+}
+
+
+// Function for rendering the ground
+vec3 groundRender2(vec3 col, vec3 ro, vec3 rd, vec2 p) {
+    const vec3 gpn = normalize(vec3(0.0, 20.5, -0.02));
+    const vec4 gpdim = vec4(gpn, 1.2);
+    float gpd = rayPlane(ro, rd, gpdim);
+
+    if(gpd < 0.0) {
+        return col;
+    }
+
+  // Tiles reflection modifier
+    vec3 gp = ro + rd * gpd;
+    float gpfre = 1.15 + dot(rd, gpn);
+    gpfre *= gpfre;
+    gpfre *= gpfre;    
+    gpfre *= gpfre;
+    gpfre *= gpfre;
+    
+    gpfre *=0.2;
+
+
+    vec3 grr = reflect(rd, gpn);
+
+    vec2 ggp = gp.xz;
+    ggp.y += iTime * 0.5;
+    float dfy = dFdy(ggp.y);
+    float gcf = sin(ggp.x) * sin(ggp.y);
+    vec2 ggn;
+
+  // Calculate the modulus
+    vec2 c = floor(ggp);
+    ggp = mod(ggp + vec2(0.5), vec2(1.0)) - vec2(0.5);
+    ggn = c;
+
+    float ggd = min(abs(ggp.x), abs(ggp.y));
+
+  // Tiles lines color modifier
+    vec3 gcol = HSV2RGB(vec3(0.01 * gcf, 0.7, 0.005 * smoothstep(1.0, 4.0, iTime) ));
+
+    vec3 rcol = outerSkyRender2(gp, grr);
+    rcol = triRender2(rcol, gp, grr);
+
+  // Tiles calculations
+    col = gcol / max(ggd, 0.0 + 0.25 * dfy) * exp(-0.25 * gpd);
+
+  // Ground horizon reflection color filter
+    rcol += HSV2RGB(vec3(0.0, 0.0, 0.0));
+  // Ground reflection factor
+    col += rcol * gpfre / 2.0;
+
+    return col;
+}
+
+// Camera Settings
+float x_rotation = 0.0;      // X rotation of the camera
+float y_rotation = 0.0;      // Y rotation of the camera
+float z_rotation = 0.0;      // Z rotation of the camera
+vec3 sceneTwo(vec2 uv) {
+
+    const float fov = 2.0;
+    // Camera location
+    vec3 ro = 1.0 * vec3(2.0, 0.5, -15.0 + smoothstep(1.0, 4.0, iTime) * 10.0);
+     // Camera look at
+    vec3 la = vec3(0.0, 1.5, 100.0);
+    vec3 up = vec3(0.0, 1.0, 0.0);
+  // camera coordinate system
+    vec3 ww = normalize(la - ro);
+    vec3 uu = normalize(cross(up, ww));
+    vec3 vv = cross(ww, uu);
+  // ray direction
+    vec3 rd = normalize(-uv.x * uu + uv.y * vv + fov * ww);
+      // Rendering process
+    vec3 col = outerSkyRender2(ro, rd);
+    col = groundRender2(col, ro, rd, uv);
+    col = triRender2(col, ro, rd);
+    return col * smoothstep(1.0, 4.0, iTime);
+
+}
+// Main image rendering function
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    // Normalized pixel coordinates (from 0 to 1)
+    vec2 uv = (2. * fragCoord - iResolution.xy) / iResolution.y;
+
+  // Convert and adjust pixel coordinates
+    float dist = 1.0 * smoothstep(4.0, 0.0, iTime);
+
+
+    vec3 col = sceneTwo(uv);
+
+    // Time varying pixel color
+  // Set the final pixel color
+    fragColor = vec4(col, 1.0);
+}
+
+  void main() {
+    mainImage(gl_FragColor, gl_FragCoord.xy);
+  }
+</script>
+<!-- Add this script tag in your HTML file -->
+<script type="x-shader/x-vertex" id="vertexShader">
+  void main() {
+    gl_Position = vec4(position, 1.0);
+  }
+</script>
+
+<script>
+
+  let canvas;
+  let camera, scene, renderer;
+  let uniforms;
+  let startTime;
+
+  init();
+  animate();
+
+  function init() {
+    console.log('init');
+    container = document.getElementById("webgl-container");
+
+    startTime = Date.now();
+
+    camera = new THREE.OrthographicCamera(0, window.innerWidth, 0, window.innerHeight, 0, 0);
+
+    scene = new THREE.Scene();
+
+    const geometry = new THREE.PlaneBufferGeometry(window.innerWidth, window.innerHeight);
+
+    uniforms = {
+      iTime: { type: "f", value: 1.0 },
+      iResolution: { type: "v2", value: new THREE.Vector2() },
+      iMousePos: { type: "v2", value: new THREE.Vector2() },
+      iScrollProgress: { type: "f" },
+    }
+
+
+    // Retrieve the vertex shader code from the script tag with the specified ID
+    const vertexShaderCode = document.getElementById("vertexShader").textContent;
+
+    // Inside the init() function, use the vertexShaderCode in ShaderMaterial
+    const material = new THREE.ShaderMaterial({
+      uniforms: uniforms,
+      vertexShader: vertexShaderCode, // Use the vertex shader code from the variable
+      fragmentShader: document.getElementById("fragmentShader").textContent,
+    });
+
+    var mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    renderer = new THREE.WebGLRenderer({
+      precision: "lowp", // Set precision to "highp" for smooth gradients and better precision
+    });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    container.appendChild(renderer.domElement);
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    function updateScrollProgress() {
+      const currentScroll = window.scrollY;
+    }
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+
+    // Call the updateScrollProgress function when the page loads and when scrolling occurs
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("scroll", updateScrollProgress);
+  }
+
+  function handleResize() {
+    uniforms.iResolution.value.x = window.innerWidth * window.devicePixelRatio;
+    uniforms.iResolution.value.y = window.innerHeight * window.devicePixelRatio;
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+
+
+
+  function handleMouseMove(event) {
+    // Update mouse position
+    uniforms.iMousePos.value.x = event.clientX * window.devicePixelRatio;
+    uniforms.iMousePos.value.y = (window.innerHeight - event.clientY) * window.devicePixelRatio;
+  }
+
+
+  function animate() {
+    render();
+    requestAnimationFrame(animate);
+  }
+
+  function render() {
+    const currentTime = Date.now();
+    uniforms.iTime.value = (currentTime - startTime) * 0.001;
+    renderer.render(scene, camera);
+  }
+</script>
